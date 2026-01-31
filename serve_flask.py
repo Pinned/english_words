@@ -59,10 +59,10 @@ def page_not_found(e):
     return "<h1>404 - 页面未找到</h1><p>请求的文件不存在</p>", 404
 
 if __name__ == '__main__':
-    print(f"服务器运行在 http://localhost:5000")
+    print(f"服务器运行在 http://localhost:5001")
     print(f"静态文件目录: {os.path.abspath(STATIC_DIR)}")
     print("可以访问:")
-    print("  - http://localhost:5000/english.html")
-    print("  - http://localhost:5000/任意文件.html")
+    print("  - http://localhost:5001/english.html")
+    print("  - http://localhost:5001/任意文件.html")
     print("按 Ctrl-C 停止服务器")
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    app.run(debug=True, port=5001, host='0.0.0.0')
