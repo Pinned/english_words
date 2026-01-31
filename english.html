@@ -161,11 +161,11 @@
         }
 
         .word-card.empty {
-            background: transparent;
+            background: #f5f5f5;
             border: 2px dashed #ccc;
-            color: transparent;
+            color: #ccc;
             pointer-events: none;
-            opacity: 0.5;
+            opacity: 0.7;
         }
 
         .word-card.wrong {
@@ -1012,16 +1012,16 @@
                     clearTimeout(gameState.queueTimer);
                 }
 
-                // 延迟1秒处理，让用户有机会配对更多单词
+                // 延迟2秒处理，让用户有更充足的时间配对更多单词
                 gameState.queueTimer = setTimeout(() => {
                     processQueues();
                     gameState.queueTimer = null;
-                }, 1000);  // 1秒延迟，累积可能的多个空位
+                }, 2000);  // 2秒延迟，累积可能的多个空位
 
             }, 500);  // 短暂延迟，让正确动画显示
         }
 
-        // 处理队列中的单词（改进的随机算法）
+        // 处理队列中的单词（渐进式填充）
         function processQueues() {
             console.log('处理队列前状态:', {
                 中文队列: gameState.chineseQueue.length,
@@ -1030,8 +1030,16 @@
                 英文空位: gameState.englishEmptySlots.length
             });
 
-            // 处理中文队列
-            while (gameState.chineseQueue.length > 0 && gameState.chineseEmptySlots.length > 0) {
+            // 渐进式填充，每次处理一对单词
+            processNextPair();
+        }
+
+        // 处理下一对单词
+        function processNextPair() {
+            let processed = false;
+
+            // 处理中文单词
+            if (gameState.chineseQueue.length > 0 && gameState.chineseEmptySlots.length > 0) {
                 // 如果队列中有多个单词，随机选择一个
                 let wordIndex = 0;
                 if (gameState.chineseQueue.length > 1) {
@@ -1039,14 +1047,14 @@
                 }
                 const wordData = gameState.chineseQueue[wordIndex];
 
-                // 如果有多个空位，随机选择一个；否则使用唯一的空位
+                // 如果有多个空位，随机选择一个
                 let slotIndex = 0;
                 if (gameState.chineseEmptySlots.length > 1) {
                     slotIndex = Math.floor(Math.random() * gameState.chineseEmptySlots.length);
                 }
                 const slot = gameState.chineseEmptySlots[slotIndex];
 
-                console.log(`中文单词 "${wordData.text}" 填充到位置 ${slot.card.dataset.index} (从${gameState.chineseQueue.length}个单词和${gameState.chineseEmptySlots.length}个空位中选择)`);
+                console.log(`中文单词 "${wordData.text}" 填充到位置 ${slot.card.dataset.index}`);
 
                 // 填充空位
                 replaceCardContent(slot.card, wordData.text, 'chinese', wordData.id);
@@ -1054,10 +1062,11 @@
                 // 从队列和空位列表中移除
                 gameState.chineseQueue.splice(wordIndex, 1);
                 gameState.chineseEmptySlots.splice(slotIndex, 1);
+                processed = true;
             }
 
-            // 处理英文队列
-            while (gameState.englishQueue.length > 0 && gameState.englishEmptySlots.length > 0) {
+            // 处理英文单词
+            if (gameState.englishQueue.length > 0 && gameState.englishEmptySlots.length > 0) {
                 // 如果队列中有多个单词，随机选择一个
                 let wordIndex = 0;
                 if (gameState.englishQueue.length > 1) {
@@ -1065,14 +1074,14 @@
                 }
                 const wordData = gameState.englishQueue[wordIndex];
 
-                // 如果有多个空位，随机选择一个；否则使用唯一的空位
+                // 如果有多个空位，随机选择一个
                 let slotIndex = 0;
                 if (gameState.englishEmptySlots.length > 1) {
                     slotIndex = Math.floor(Math.random() * gameState.englishEmptySlots.length);
                 }
                 const slot = gameState.englishEmptySlots[slotIndex];
 
-                console.log(`英文单词 "${wordData.text}" 填充到位置 ${slot.card.dataset.index} (从${gameState.englishQueue.length}个单词和${gameState.englishEmptySlots.length}个空位中选择)`);
+                console.log(`英文单词 "${wordData.text}" 填充到位置 ${slot.card.dataset.index}`);
 
                 // 填充空位
                 replaceCardContent(slot.card, wordData.text, 'english', wordData.id);
@@ -1080,14 +1089,22 @@
                 // 从队列和空位列表中移除
                 gameState.englishQueue.splice(wordIndex, 1);
                 gameState.englishEmptySlots.splice(slotIndex, 1);
+                processed = true;
             }
 
-            console.log('处理队列后状态:', {
-                中文队列: gameState.chineseQueue.length,
-                英文队列: gameState.englishQueue.length,
-                中文空位: gameState.chineseEmptySlots.length,
-                英文空位: gameState.englishEmptySlots.length
-            });
+            // 如果还有待处理的单词，延迟200ms后继续处理下一对
+            if (processed && (gameState.chineseQueue.length > 0 || gameState.englishQueue.length > 0)) {
+                setTimeout(() => {
+                    processNextPair();
+                }, 200);
+            } else {
+                console.log('处理队列完成:', {
+                    中文队列: gameState.chineseQueue.length,
+                    英文队列: gameState.englishQueue.length,
+                    中文空位: gameState.chineseEmptySlots.length,
+                    英文空位: gameState.englishEmptySlots.length
+                });
+            }
         }
 
         // 同步选择新单词
